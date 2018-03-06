@@ -1,5 +1,4 @@
 .idea/
 venv/
 datasets/
-*.clf
-*.predictions
+output/
