@@ -110,13 +110,32 @@ class Perceptron(Model):
         self._W = np.zeros(X.shape[1])
         for k in range(self.iterations):
             for i in range(X.shape[0]):
-                yp = 1 if np.dot(self._W, X[i].toarray().ravel()) >= 0 else -1
+                yp = 1 if X[i].dot(self._W)[0] >= 0 else -1
                 if (yp == 1 and y[i] == 0) or (yp == -1 and y[i] == 1):
-                    self._W += self.learning_rate * (-1 if y[i] == 0 else 1) * X[i, :]
+                    self._W += self.learning_rate * (-1 if y[i] == 0 else 1) * X[i].toarray().ravel()
 
     def predict(self, X):
         # TODO: Write code to make predictions.
-        return np.array([1 if np.dot(self._W, X[i, :].toarray().ravel()) >= 0 else 0 for i in range(X.shape[0])])
+        if self._W is None:
+            raise ValueError('Model should be fit first')
+        n = min(X.shape[1], self._W.shape[0])
+        return np.array([1 if X[i, :n].dot(self._W[:n])[0] >= 0 else 0 for i in range(X.shape[0])])
 
 
 # TODO: Add other Models as necessary.
+
+class LogisticRegression(Model):
+
+    def __init__(self):
+        super().__init__()
+        self._W = None
+        self.learning_rate = None
+        self.iterations = None
+
+    def fit(self, X, y):
+        self._W = np.zeros(X.shape[1])
+        delta_y = y - 1/(1 + np.exp(-self._W * X))
+        pass
+
+    def predict(self, X):
+        pass
