@@ -21,10 +21,14 @@ def get_args():
 
     # TODO: Add optional command-line arguments as necessary.
     parser.add_argument('--algorithm', type=str)
-    parser.add_argument("--online-learning-rate", type=float, help="The learning rate for perceptron",
-                        default=1.0)
+    parser.add_argument("--online-learning-rate", type=float, help="The learning rate for logistic regression",
+                        default=0.01)
     parser.add_argument("--online-training-iterations", type=int,
                         help="The number of training iterations for online methods.", default=5)
+    parser.add_argument("--gd-iterations", type=int,
+                        help="The number of iterations of gradient descent to perform", default=20)
+    parser.add_argument("--num-features-to-select", type=int,
+                        help="The number of features to use for logistic regression", default=-1)
     args = parser.parse_args()
 
     return args
@@ -61,6 +65,8 @@ def main():
             model = models.SumOfFeatures()
         elif args.algorithm.lower() == 'perceptron':
             model = models.Perceptron(args.online_learning_rate, args.online_training_iterations)
+        elif args.algorithm.lower() == 'logisticregression':
+            model = models.LogisticRegression(args.online_learning_rate, args.gd_iterations, args.num_features_to_select)
         else:
             raise Exception('The model given by --model is not yet supported.')
 

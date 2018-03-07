@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.special import expit
+from utils import get_best_features
 
 
 class Model(object):
@@ -107,7 +109,8 @@ class Perceptron(Model):
 
     def fit(self, X, y):
         # TODO: Write code to fit the model.
-        self._W = np.zeros(X.shape[1])
+        self.num_input_features = X.shape[1]
+        self._W = np.zeros(self.num_input_features)
         for k in range(self.iterations):
             for i in range(X.shape[0]):
                 yp = 1 if X[i].dot(self._W)[0] >= 0 else -1
@@ -116,8 +119,8 @@ class Perceptron(Model):
 
     def predict(self, X):
         # TODO: Write code to make predictions.
-        if self._W is None:
-            raise ValueError('Model should be fit first')
+        if self.num_input_features is None:
+            raise Exception('fit must be called before predict.')
         n = min(X.shape[1], self._W.shape[0])
         return np.array([1 if X[i, :n].dot(self._W[:n])[0] >= 0 else 0 for i in range(X.shape[0])])
 
@@ -126,16 +129,37 @@ class Perceptron(Model):
 
 class LogisticRegression(Model):
 
-    def __init__(self):
+    def __init__(self, rate, iterations, num_of_features):
         super().__init__()
-        self._W = None
-        self.learning_rate = None
-        self.iterations = None
+        self._w = None
+        self.learning_rate = rate
+        self.iterations = iterations
+        self.num_of_features_to_select = num_of_features
+        self.best_feature_idx_list = None
 
     def fit(self, X, y):
-        self._W = np.zeros(X.shape[1])
-        delta_y = y - 1/(1 + np.exp(-self._W * X))
-        pass
+        self.num_input_features = X.shape[1]
+        delta_y = None
+        X_selected = X
+        if self.num_of_features_to_select > 0 and self.num_input_features > self.num_of_features_to_select:
+            self._w = np.zeros(self.num_of_features_to_select)
+            X_selected, self.best_feature_idx_list = get_best_features(self.num_of_features_to_select, X, y)
+        else:
+            self._w = np.zeros(self.num_input_features)
+        for k in range(self.iterations):
+            delta_y = y - expit(X_selected.dot(self._w))
+            self._w += self.learning_rate * X_selected.T.dot(delta_y)
 
     def predict(self, X):
-        pass
+        if self.num_input_features is None:
+            raise Exception('fit must be called before predict.')
+        if self.num_of_features_to_select > 0 and X.shape[1] > self.num_of_features_to_select:
+            X_selected = np.zeros([X.shape[0], self.num_of_features_to_select])
+            for i in range(X.shape[0]):
+                for j in range(len(self.best_feature_idx_list)):
+                    X_selected[i][j] = (0 if self.best_feature_idx_list[j] >= X.shape[1] else X[i, self.best_feature_idx_list[j]])
+            n = min(self.num_of_features_to_select, self._w.shape[0])
+            return np.array([1 if expit(np.dot(X_selected[i, :n], self._w[:n])) >= 0.5 else 0 for i in range(X.shape[0])])
+        else:
+            n = min(X.shape[1], self._w.shape[0])
+            return np.array([1 if expit(X[i, :n].dot(self._w[:n])) >= 0.5 else 0 for i in range(X.shape[0])])
