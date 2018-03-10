@@ -1,5 +1,5 @@
 import numpy as np
-import heapq
+import bisect
 from scipy.sparse import csr_matrix
 
 def discrete(X):
@@ -30,13 +30,12 @@ def calculate_conditional_entropy(Xi, y):
 def get_best_features(num_of_features, X, y):
     d = discrete(X)
     entropy_list = []
-    entropy_records = dict()
     for i in range(X.shape[1]):
         e = calculate_conditional_entropy(get_discrete_features(X, i, d), y)
-        entropy_records[e] = i
-        heapq.heappush(entropy_list, e)
-    best_entropy = heapq.nsmallest(num_of_features, entropy_list)
-    best_feature_idx_list = [entropy_records[e] for e in best_entropy]
+        bisect.insort(entropy_list, (e, i))
+        if len(entropy_list) > num_of_features:
+            entropy_list.pop()
+    best_feature_idx_list = [e[1] for e in entropy_list]
     return csr_matrix(np.hstack([X.getcol(i).todense() for i in best_feature_idx_list])), best_feature_idx_list
 
 

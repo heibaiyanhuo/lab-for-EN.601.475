@@ -21,6 +21,8 @@ def get_args():
 
     # TODO: Add optional command-line arguments as necessary.
     parser.add_argument('--algorithm', type=str)
+    # parser.add_argument("--online-learning-rate", type=float, help="The learning rate for perceptron regression",
+    #                     default=1.0)
     parser.add_argument("--online-learning-rate", type=float, help="The learning rate for logistic regression",
                         default=0.01)
     parser.add_argument("--online-training-iterations", type=int,

@@ -100,29 +100,29 @@ class SumOfFeatures(Model):
 
 class Perceptron(Model):
 
-    def __init__(self, rate=1, iter=5):
+    def __init__(self, rate, iter):
         super().__init__()
         # TODO: Initializations etc. go here.
-        self._W = None
+        self._w = None
         self.learning_rate = rate
         self.iterations = iter
 
     def fit(self, X, y):
         # TODO: Write code to fit the model.
         self.num_input_features = X.shape[1]
-        self._W = np.zeros(self.num_input_features)
+        self._w = np.zeros(self.num_input_features)
         for k in range(self.iterations):
             for i in range(X.shape[0]):
-                yp = 1 if X[i].dot(self._W)[0] >= 0 else -1
+                yp = 1 if X[i].dot(self._w)[0] >= 0 else -1
                 if (yp == 1 and y[i] == 0) or (yp == -1 and y[i] == 1):
-                    self._W += self.learning_rate * (-1 if y[i] == 0 else 1) * X[i].toarray().ravel()
+                    self._w += self.learning_rate * (-1 if y[i] == 0 else 1) * X[i].toarray().ravel()
 
     def predict(self, X):
         # TODO: Write code to make predictions.
         if self.num_input_features is None:
             raise Exception('fit must be called before predict.')
-        n = min(X.shape[1], self._W.shape[0])
-        return np.array([1 if X[i, :n].dot(self._W[:n])[0] >= 0 else 0 for i in range(X.shape[0])])
+        n = min(X.shape[1], self._w.shape[0])
+        return np.array([1 if X[i, :n].dot(self._w[:n])[0] >= 0 else 0 for i in range(X.shape[0])])
 
 
 # TODO: Add other Models as necessary.
