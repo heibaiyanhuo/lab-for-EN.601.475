@@ -1,10 +1,11 @@
 import os
 
-
-ALGORITHM = 'useless'
+ALGORITHM = 'logisticregression'
 DATA_DIR = 'datasets'
 OUTPUT_DIR = 'output'
 DATASETS = ['easy', 'hard', 'bio', 'finance', 'nlp', 'speech', 'vision']
+# DATASETS = ['easy']
+# DATASETS = ['easy', 'hard', 'bio', 'finance', 'speech', 'vision']
 
 
 if not os.path.exists(DATA_DIR):
@@ -17,7 +18,7 @@ for dataset in DATASETS:
     print('Training algorithm %s on dataset %s...' % (ALGORITHM, dataset))
     data = os.path.join(DATA_DIR, '%s.train' % (dataset))
     model_file = os.path.join(OUTPUT_DIR, '%s.train.%s.pkl' % (dataset, ALGORITHM))
-    unformatted_cmd = 'python3 classify.py --data %s --mode train --model-file %s --algorithm %s'
+    unformatted_cmd = 'python3 classify.py --data %s --mode train --model-file %s --algorithm %s --num-features-to-select 10'
     cmd = unformatted_cmd % (data, model_file, ALGORITHM)
     os.system(cmd)
 
