@@ -120,8 +120,10 @@ class LambdaMeans(Model):
                     self.R_mat = np.row_stack((self.R_mat, r_new))
 
             # M-step
-            r_weight_mat = 1 / np.sum(self.R_mat, axis=1).reshape(self.K, -1)
-            self.mu_mat = np.dot(self.R_mat, X) * r_weight_mat
+            # weight_mat = 1 / np.sum(self.R_mat, axis=1).reshape(self.K, -1)
+            r_sum = np.sum(self.R_mat, axis=1)
+            weight_mat = np.where(r_sum == 0, 0, 1 / r_sum).reshape(self.K, -1)
+            self.mu_mat = np.dot(self.R_mat, X) * weight_mat
 
 
     def predict(self, X):
@@ -140,7 +142,10 @@ class StochasticKMeans(Model):
     def __init__(self):
         super().__init__()
         # TODO: Initializations etc. go here.
-        pass
+        self.K = 0
+        self.P_mat = None
+        self.mu_mat = None
+        self.C = 2
 
     def fit(self, X, _, **kwargs):
         assert 'num_clusters' in kwargs, 'Need the number of clusters (K)'
@@ -149,6 +154,36 @@ class StochasticKMeans(Model):
         iterations = kwargs['iterations']
         # TODO: Write code to fit the model.  NOTE: labels should not be used here.
 
+        # init
+        X = X.toarray()
+        n, m = X.shape
+        self.K = num_clusters
+        if self.K == 1:
+            self.mu_mat = np.mean(X, axis=0).reshape(1, -1)
+        else:
+            min_vec = np.min(X, axis=0)
+            max_vec = np.max(X, axis=0)
+            self.mu_mat = np.stack([(1 - i / (self.K - 1)) * min_vec + (i / (self.K - 1)) * max_vec for i in range(self.K)], axis=0)
+
+        for t in range(iterations):
+            beta_t = self.C * (t + 1)
+            self.P_mat = np.zeros([self.K, n])
+            for i in range(n):
+                distance_vec = np.linalg.norm(self.mu_mat - X[i, :], axis=1)
+                avg_distance = np.mean(distance_vec)
+                pk = np.exp(-beta_t * distance_vec / avg_distance)
+                self.P_mat[:, i] = pk / np.sum(pk)
+
+            p_weight_mat = 1 / np.sum(self.P_mat, axis=1).reshape(self.K, -1)
+            self.mu_mat = np.dot(self.P_mat, X) * p_weight_mat
+
+
     def predict(self, X):
         # TODO: Write code to make predictions.
-        pass
+        X = X.toarray()
+        n, m = X.shape
+        cutoff = min(m, self.mu_mat.shape[1])
+        y_predictions = np.zeros(n)
+        for i in range(n):
+            y_predictions[i] = np.argmin(np.linalg.norm(self.mu_mat[:, :cutoff] - X[i, :cutoff], axis=1))
+        return y_predictions
